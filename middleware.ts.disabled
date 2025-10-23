@@ -1,0 +1,87 @@
+import { NextResponse } from "next/server"
+import type { NextRequest } from "next/server"
+
+// Rutas que requieren autenticación
+const protectedRoutes = [
+  '/dashboard',
+  '/profile',
+  '/settings',
+]
+
+// Rutas públicas (sin regex dinámico)
+const publicPaths = [
+  '/',
+  '/_next',
+  '/favicon.ico',
+  '/images',
+  '/auth',
+  '/api/auth',
+]
+
+// Extensiones de archivos estáticos
+const staticFileExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.ico', '.svg', '.css', '.js']
+
+function isStaticFile(pathname: string): boolean {
+  return staticFileExtensions.some(ext => pathname.toLowerCase().endsWith(ext))
+}
+
+function isPublicPath(pathname: string): boolean {
+  return publicPaths.some(path => 
+    pathname === path || 
+    pathname.startsWith(`${path}/`)
+  ) || isStaticFile(pathname)
+}
+
+export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl
+
+  try {
+    // Verificar si la ruta es pública
+    const isPublic = isPublicPath(pathname)
+
+    // Si es una ruta pública, permitir el acceso
+    if (isPublic) {
+      return NextResponse.next()
+    }
+
+    // Verificar si la ruta está protegida
+    const isProtectedRoute = protectedRoutes.some(route => 
+      pathname.startsWith(route)
+    )
+
+    // Si es una ruta protegida, verificar autenticación
+    if (isProtectedRoute) {
+      const sessionTokenName = process.env.NODE_ENV === 'production'
+        ? '__Secure-next-auth.session-token'
+        : 'next-auth.session-token'
+      
+      const token = request.cookies.get(sessionTokenName)
+      
+      if (!token) {
+        const url = new URL('/auth/login', request.url)
+        url.searchParams.set('callbackUrl', pathname)
+        return NextResponse.redirect(url)
+      }
+    }
+
+    // Para todas las demás rutas, permitir el acceso
+    return NextResponse.next()
+
+  } catch (error) {
+    console.error('[MIDDLEWARE_ERROR]', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      pathname,
+      userAgent: request.headers.get('user-agent')
+    })
+
+    return NextResponse.json(
+      { error: 'Error interno del servidor' },
+      { status: 500 }
+    )
+  }
+}
+
+// Configuración para aplicar el middleware solo a rutas específicas
+export const config = {
+  matcher: [],  // Deshabilitado temporalmente
+}
