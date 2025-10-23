@@ -15,10 +15,13 @@ declare module 'next-auth' {
 
 // Base URL configuration
 const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+const isProduction = process.env.NODE_ENV === 'production';
 
-// Log environment variables for debugging
-console.log('NEXTAUTH_URL:', baseUrl);
-console.log('AUTHENTIK_CLIENT_ID:', process.env.AUTHENTIK_CLIENT_ID ? '***' : 'Not set');
+// Solo log en desarrollo
+if (!isProduction) {
+  console.log('NEXTAUTH_URL:', baseUrl);
+  console.log('AUTHENTIK_CLIENT_ID:', process.env.AUTHENTIK_CLIENT_ID ? '***' : 'Not set');
+}
 
 const authConfig: NextAuthConfig = {
   providers: [
@@ -112,11 +115,23 @@ const authConfig: NextAuthConfig = {
     error: '/auth/error',
   },
   session: {
-    strategy: 'jwt'
+    strategy: 'jwt',
+    maxAge: 30 * 24 * 60 * 60, // 30 días
+  },
+  cookies: {
+    sessionToken: {
+      name: isProduction ? '__Secure-next-auth.session-token' : 'next-auth.session-token',
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: isProduction,
+      },
+    },
   },
   secret: process.env.NEXTAUTH_SECRET,
-  trustHost: true,
-  debug: process.env.NODE_ENV === 'development'
+  trustHost: !isProduction, // Solo en desarrollo
+  debug: false, // Desactivado en producción
 };
 
 export { authConfig };

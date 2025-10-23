@@ -54,13 +54,13 @@ export function AuthButton() {
 
   return (
     <div className="flex gap-2">
-      <Button 
-        onClick={() => signIn('authentik')} 
-        variant="outline" 
+      <Button
+        onClick={() => signIn('authentik')}
+        variant="outline"
         size="sm"
         className="hidden sm:flex items-center gap-2 bg-white/5 hover:bg-white/10 border-purple-700 text-white"
       >
-        <FaGoogle className="h-4 w-4" />
+        <Sparkles className="h-4 w-4" />
         <span>Iniciar sesión</span>
       </Button>
     </div>

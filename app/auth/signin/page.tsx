@@ -49,17 +49,12 @@ export default function SignInPage() {
               className="w-full bg-white/5 hover:bg-white/10 border-purple-700 text-white h-12 text-base"
               type="button"
             >
-              <FaGoogle className="mr-3 h-5 w-5" />
-              Iniciar sesión con Google
+              <Sparkles className="mr-3 h-5 w-5" />
+              Iniciar sesión con Authentik
             </Button>
-            <Button
-              onClick={() => handleSignIn('authentik')}
-              variant="outline"
-              className="w-full bg-white/5 hover:bg-white/10 border-purple-700 text-white h-12 text-base"
-            >
-              <FaFacebook className="mr-3 h-5 w-5 text-blue-400" />
-              Continuar con Facebook
-            </Button>
+            <div className="text-center text-sm text-purple-300 mt-4">
+              <p>Usa tu cuenta de Authentik para acceder a las lecturas místicas</p>
+            </div>
           </CardContent>
         </Card>
       </div>

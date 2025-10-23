@@ -1,13 +1,23 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   eslint: {
-    ignoreDuringBuilds: true,
+    // Solo ignorar en desarrollo - en producción deben corregirse
+    ignoreDuringBuilds: process.env.NODE_ENV === 'development',
   },
   typescript: {
-    ignoreBuildErrors: true,
+    // Solo ignorar en desarrollo - en producción deben corregirse
+    ignoreBuildErrors: process.env.NODE_ENV === 'development',
   },
   images: {
-    unoptimized: true,
+    // Habilitar optimización en producción
+    unoptimized: process.env.NODE_ENV === 'development',
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'auth.sergihno.cl',
+        pathname: '/**',
+      },
+    ],
   },
 }
 
