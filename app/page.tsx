@@ -2,12 +2,28 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Sparkles, Moon, Star, Eye } from "lucide-react"
 import Link from "next/link"
+import { AuthButton } from "@/components/auth/auth-button"
 
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-950 via-indigo-950 to-black text-white">
+      {/* Header/Navbar */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-black/50 backdrop-blur-md border-b border-purple-500/30">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex justify-between items-center">
+            <Link href="/" className="flex items-center gap-2">
+              <Sparkles className="h-6 w-6 text-yellow-400" />
+              <span className="text-xl font-bold bg-gradient-to-r from-yellow-400 to-purple-300 bg-clip-text text-transparent">
+                Tarot Místico IA
+              </span>
+            </Link>
+            <AuthButton />
+          </div>
+        </div>
+      </nav>
+
       {/* Hero Section */}
-      <section className="relative overflow-hidden">
+      <section className="relative overflow-hidden pt-20">
         <div className="absolute inset-0 bg-[url('/placeholder.svg?height=800&width=1200')] bg-cover bg-center opacity-20"></div>
         <div className="relative container mx-auto px-4 py-20 text-center">
           <div className="mb-8 flex justify-center">

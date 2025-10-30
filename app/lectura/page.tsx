@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ArrowLeft, Heart, Briefcase, Activity, Sparkles, Moon, Star } from "lucide-react"
 import Link from "next/link"
+import { AuthButton } from "@/components/auth/auth-button"
 
 const tiposLectura = [
   {
@@ -55,12 +56,15 @@ export default function LecturaPage() {
     <div className="min-h-screen bg-gradient-to-b from-indigo-950 via-purple-950 to-black text-white">
       {/* Header */}
       <div className="container mx-auto px-4 py-8">
-        <Link href="/">
-          <Button variant="ghost" className="text-purple-400 hover:text-purple-300">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Volver al Inicio
-          </Button>
-        </Link>
+        <div className="flex justify-between items-center">
+          <Link href="/">
+            <Button variant="ghost" className="text-purple-400 hover:text-purple-300">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Volver al Inicio
+            </Button>
+          </Link>
+          <AuthButton />
+        </div>
       </div>
 
       {/* Hero Section */}
@@ -224,6 +228,11 @@ function TiradaCartas({ tipo }: { tipo: string }) {
   return (
     <div className="min-h-screen bg-gradient-to-b from-indigo-950 via-purple-950 to-black text-white p-4">
       <div className="container mx-auto max-w-6xl">
+        {/* Header con AuthButton */}
+        <div className="flex justify-end mb-4">
+          <AuthButton />
+        </div>
+
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
             Tu Lectura Mística
