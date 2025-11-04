@@ -27,28 +27,41 @@ export const authConfig = {
     },
     async redirect({ url, baseUrl }) {
       try {
-        // Prevent redirects to internal auth routes
-        if (url.includes('/if/') || url.includes('/user')) {
-          return baseUrl
+        // Prevent redirects to internal auth routes and dashboard
+        if (url.includes('/if/') || url.includes('/user') || url.includes('/dashboard')) {
+          return baseUrl + '/'
+        }
+
+        // After successful login, redirect to home page
+        if (url === baseUrl || url === `${baseUrl}/`) {
+          return baseUrl + '/'
         }
 
         // For other redirects
         if (url.startsWith('http')) {
           const urlObj = new URL(url)
           if (urlObj.origin === baseUrl) {
+            // If redirecting to dashboard, go to home instead
+            if (urlObj.pathname === '/dashboard') {
+              return '/'
+            }
             return urlObj.pathname + urlObj.search + urlObj.hash
           }
-          return baseUrl
+          return baseUrl + '/'
         }
 
         // Ensure URLs are relative
         if (url.startsWith('/')) {
+          // If redirecting to dashboard, go to home instead
+          if (url === '/dashboard') {
+            return '/'
+          }
           return url
         }
       } catch (e) {
         console.error('Redirect error:', e)
       }
-      return baseUrl
+      return baseUrl + '/'
     },
   },
   providers: [], // Los providers se agregan en el route.ts
