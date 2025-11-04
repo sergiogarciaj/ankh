@@ -68,6 +68,6 @@ export const authConfig = {
     },
   },
   secret: process.env.NEXTAUTH_SECRET,
-  trustHost: !isProduction,
+  trustHost: true, // Always trust host in development and local network
   debug: false,
 } satisfies NextAuthConfig
