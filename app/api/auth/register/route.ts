@@ -5,6 +5,9 @@ import { handleAPIError, ValidationError } from '@/lib/middleware/error-handler'
 import { checkRateLimit, getClientIP } from '@/lib/middleware/rate-limit'
 import { logger } from '@/lib/utils/logger'
 
+// Force Node.js runtime to support crypto module
+export const runtime = 'nodejs'
+
 // Validación del registro
 const registerSchema = z.object({
   name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),

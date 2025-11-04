@@ -1,11 +1,15 @@
 import NextAuth from 'next-auth'
-import type { NextAuthConfig, DefaultSession } from 'next-auth'
+import type { DefaultSession } from 'next-auth'
 import GoogleProvider from 'next-auth/providers/google'
 import GitHubProvider from 'next-auth/providers/github'
 import FacebookProvider from 'next-auth/providers/facebook'
 import TwitterProvider from 'next-auth/providers/twitter'
 import CredentialsProvider from 'next-auth/providers/credentials'
-import { getUserByEmail, createUser, verifyPassword } from '@/lib/auth/users'
+import { getUserByEmail, verifyPassword } from '@/lib/auth/users'
+import { authConfig as baseAuthConfig } from '@/auth.config'
+
+// Force Node.js runtime to support crypto module
+export const runtime = 'nodejs'
 
 declare module 'next-auth' {
   interface Session {
@@ -34,7 +38,9 @@ if (!isProduction) {
   ].filter(Boolean).join(', '))
 }
 
-const authConfig: NextAuthConfig = {
+// Extend base config with providers that require Node.js runtime
+const authConfig = {
+  ...baseAuthConfig,
   providers: [
     // Google OAuth
     GoogleProvider({
@@ -98,6 +104,7 @@ const authConfig: NextAuthConfig = {
     }),
   ],
   callbacks: {
+    ...baseAuthConfig.callbacks,
     async jwt({ token, account, profile, user }) {
       if (account) {
         token.accessToken = account.access_token
@@ -115,54 +122,7 @@ const authConfig: NextAuthConfig = {
       }
       return session
     },
-    async redirect({ url, baseUrl }) {
-      try {
-        // Prevent redirects to internal auth routes
-        if (url.includes('/if/') || url.includes('/user')) {
-          return baseUrl
-        }
-
-        // For other redirects
-        if (url.startsWith('http')) {
-          const urlObj = new URL(url)
-          if (urlObj.origin === baseUrl) {
-            return urlObj.pathname + urlObj.search + urlObj.hash
-          }
-          return baseUrl
-        }
-
-        // Ensure URLs are relative
-        if (url.startsWith('/')) {
-          return url
-        }
-      } catch (e) {
-        console.error('Redirect error:', e)
-      }
-      return baseUrl
-    },
   },
-  pages: {
-    signIn: '/auth/signin',
-    error: '/auth/error',
-  },
-  session: {
-    strategy: 'jwt',
-    maxAge: 30 * 24 * 60 * 60, // 30 días
-  },
-  cookies: {
-    sessionToken: {
-      name: isProduction ? '__Secure-next-auth.session-token' : 'next-auth.session-token',
-      options: {
-        httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        secure: isProduction,
-      },
-    },
-  },
-  secret: process.env.NEXTAUTH_SECRET,
-  trustHost: !isProduction, // Solo en desarrollo
-  debug: false, // Desactivado en producción
 }
 
 export { authConfig }
