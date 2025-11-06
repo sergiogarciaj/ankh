@@ -1,5 +1,30 @@
+import { randomBytes } from 'node:crypto';
+
 import NextAuth from 'next-auth';
+import Credentials from 'next-auth/providers/credentials';
 import type { NextAuthConfig, DefaultSession } from 'next-auth';
+
+const isProduction = process.env.NODE_ENV === 'production';
+
+const globalForAuth = globalThis as typeof globalThis & {
+  __nextAuthDevSecret?: string;
+  __nextAuthSecretWarned?: boolean;
+};
+
+const resolvedSecret =
+  process.env.NEXTAUTH_SECRET ??
+  (!isProduction
+    ? (globalForAuth.__nextAuthDevSecret ||= randomBytes(32).toString('hex'))
+    : undefined);
+
+if (!process.env.NEXTAUTH_SECRET && !isProduction && !globalForAuth.__nextAuthSecretWarned) {
+  console.warn('NEXTAUTH_SECRET not set. Using a randomly generated fallback secret for development.');
+  globalForAuth.__nextAuthSecretWarned = true;
+}
+
+if (!resolvedSecret) {
+  throw new Error('NEXTAUTH_SECRET must be set in production environments.');
+}
 
 declare module 'next-auth' {
   interface Session {
@@ -20,26 +45,59 @@ const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
 console.log('NEXTAUTH_URL:', baseUrl);
 console.log('AUTHENTIK_CLIENT_ID:', process.env.AUTHENTIK_CLIENT_ID ? '***' : 'Not set');
 
-const authConfig: NextAuthConfig = {
-  providers: [
-    {
-      id: 'authentik',
-      name: 'Authentik',
-      type: 'oidc',
-      issuer: process.env.AUTHENTIK_ISSUER,
-      clientId: process.env.AUTHENTIK_CLIENT_ID,
-      clientSecret: process.env.AUTHENTIK_CLIENT_SECRET || '',
-      checks: ['pkce', 'state'],
-      profile(profile) {
+const authentikIssuer = process.env.AUTHENTIK_ISSUER;
+const authentikClientId = process.env.AUTHENTIK_CLIENT_ID;
+const authentikClientSecret = process.env.AUTHENTIK_CLIENT_SECRET;
+
+const providers: NextAuthConfig['providers'] = [];
+
+if (authentikIssuer && authentikClientId && authentikClientSecret) {
+  providers.push({
+    id: 'authentik',
+    name: 'Authentik',
+    type: 'oidc',
+    issuer: authentikIssuer,
+    clientId: authentikClientId,
+    clientSecret: authentikClientSecret,
+    checks: ['pkce', 'state'],
+    profile(profile) {
+      return {
+        id: profile.sub,
+        name: profile.name || profile.preferred_username,
+        email: profile.email,
+        image: profile.picture || null,
+      };
+    },
+  });
+} else if (!isProduction) {
+  console.warn('Authentik configuration not found. Using development credentials provider.');
+  providers.push(
+    Credentials({
+      name: 'Development Credentials',
+      credentials: {
+        email: { label: 'Email', type: 'email', placeholder: 'dev@example.com' },
+      },
+      authorize(credentials) {
+        const email = credentials?.email as string | undefined;
+
+        if (!email) {
+          return null;
+        }
+
         return {
-          id: profile.sub,
-          name: profile.name || profile.preferred_username,
-          email: profile.email,
-          image: profile.picture || null,
+          id: 'dev-user',
+          name: 'Developer User',
+          email,
         };
       },
-    },
-  ],
+    })
+  );
+} else {
+  throw new Error('Authentik configuration must be provided in production.');
+}
+
+const authConfig: NextAuthConfig = {
+  providers,
   callbacks: {
     async jwt({ token, account, profile }) {
       if (account) {
@@ -114,7 +172,7 @@ const authConfig: NextAuthConfig = {
   session: {
     strategy: 'jwt'
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: resolvedSecret,
   trustHost: true,
   debug: process.env.NODE_ENV === 'development'
 };
